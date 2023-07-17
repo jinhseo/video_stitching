@@ -11,6 +11,7 @@ import numpy as np
 
 import torch
 import torch.nn.functional as F
+import torchvision.transforms.functional as F_T
 from detect.ctpn_model import CTPN_Model
 from detect.ctpn_utils import gen_anchor, bbox_transfor_inv, clip_box, filter_bbox,nms, TextProposalConnectorOriented
 from detect.ctpn_utils import resize
@@ -28,7 +29,6 @@ model.load_state_dict(torch.load(weights, map_location=device)['model_state_dict
 model.to(device)
 model.eval()
 
-
 def dis(image):
     cv2.imshow('image', image)
     cv2.waitKey(0)
@@ -36,12 +36,20 @@ def dis(image):
 
 
 def get_det_boxes(image,display = True, expand = True):
+    #import IPython; IPython.embed() ### TODO:
     image = resize(image, height=height)
+    #image = F_T.resize(image, height)
     image_r = image.copy()
+    #image_r = image.clone()
     image_c = image.copy()
+    #image_c = image.clone()
     h, w = image.shape[:2]
+
     image = image.astype(np.float32) - config.IMAGE_MEAN
+    #image = image.type(torch.float32) - torch.tensor(config.IMAGE_MEAN).to(device)
+
     image = torch.from_numpy(image.transpose(2, 0, 1)).unsqueeze(0).float()
+    #image = image.permute(2, 0, 1).unsqueeze(0).float()
 
     with torch.no_grad():
         image = image.to(device)
@@ -60,7 +68,6 @@ def get_det_boxes(image,display = True, expand = True):
         select_anchor = select_anchor.astype(np.int32)
         # print(select_anchor.shape)
         keep_index = filter_bbox(select_anchor, 16)
-
         # nms
         select_anchor = select_anchor[keep_index]
         select_score = select_score[keep_index]

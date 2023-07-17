@@ -35,3 +35,6 @@
 *.thm
 .DS_Store
 *.bak
+*.png
+*.txt
+*.mp4

@@ -11,7 +11,6 @@ def dis(image):
 
 def sort_box(box):
     """
-    对box进行排序
     """
     box = sorted(box, key=lambda x: sum([x[1], x[3], x[5], x[7]]))
     return box
@@ -38,7 +37,7 @@ def dumpRotateImage(img, degree, pt1, pt2, pt3, pt4):
 
 def charRec(img, text_recs, adjust=False):
     """
-    加载OCR模型，进行字符识别
+
     """
     results = {}
     xDim, yDim = img.shape[1], img.shape[0]
@@ -57,22 +56,22 @@ def charRec(img, text_recs, adjust=False):
             pt3 = (min(rec[6], xDim - 2), min(yDim - 2, rec[7]))
             pt4 = (rec[4], rec[5])
 
-        degree = degrees(atan2(pt2[1] - pt1[1], pt2[0] - pt1[0]))  # 图像倾斜角度
+        degree = degrees(atan2(pt2[1] - pt1[1], pt2[0] - pt1[0]))
 
         partImg = dumpRotateImage(img, degree, pt1, pt2, pt3, pt4)
         # dis(partImg)
-        if partImg.shape[0] < 1 or partImg.shape[1] < 1 or partImg.shape[0] > partImg.shape[1]:  # 过滤异常图片
+        if partImg.shape[0] < 1 or partImg.shape[1] < 1 or partImg.shape[0] > partImg.shape[1]:
             continue
         text = recognizer.recognize(partImg)
         if len(text) > 0:
             results[index] = [rec]
-            results[index].append(text)  # 识别文字
+            results[index].append(text)
 
     return results
 
 def ocr(image):
     # detect
-    text_recs, img_framed, image = get_det_boxes(image)
+    text_recs, img_framed, image = get_det_boxes(image, display = False)
     text_recs = sort_box(text_recs)
     result = charRec(image, text_recs)
     return result, img_framed
