@@ -37,6 +37,7 @@ if __name__ == "__main__":
     start_time, end_time = 0, 0
     n_th = 0
 
+
     corner_h = args.height
     corner_w = args.weight
     for frame in vid:
