@@ -22,8 +22,8 @@ if __name__ == "__main__":
                         help='path to save clips')
     parser.add_argument('--height', type=int, default=0,
                         help='height to define corner')
-    parser.add_argument('--weight', type=int, default=0,
-                        help='weight to define corner')
+    parser.add_argument('--width', type=int, default=0,
+                        help='width to define corner')
     args = parser.parse_args()
     device = torch.device("cuda")
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
 
     corner_h = args.height
-    corner_w = args.weight
+    corner_w = args.width
     for frame in vid:
         if round(frame['pts'] / (1/fps*30), 4).is_integer():
             time_board = to_pil_image(frame['data'][:, corner_w:, corner_h:])
