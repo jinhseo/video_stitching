@@ -9,6 +9,19 @@ import numpy as np
 from torchvision.transforms.functional import to_pil_image
 from ocr import ocr
 
+def run_ocr(last_results, last_frames, corner_w, corner_h):
+    for last_frame in last_frames:
+        time_board = to_pil_image(last_frame['data'][:, corner_w:, corner_h:])
+        result, _ = ocr(np.array(time_board))
+        update_result(last_results, result)
+    return last_results
+
+def update_result(last_results, result):
+    for r in result.values():
+        if ((':' or '.' or '-') in r[-1] and (len(r[-1]) < 5)) or (r[-1].isdigit() and len(r[-1]) >= 3):
+            last_results.append(r[-1])
+    return last_results
+
 def crop_area(img):
     area = img[:]
     return area
@@ -37,10 +50,69 @@ if __name__ == "__main__":
     start_time, end_time = 0, 0
     n_th = 0
 
-
+    symbols = [':', '.', '-']
     corner_h = args.height
     corner_w = args.width
-    for frame in vid:
+    last_frames = []
+    final_result = 0
+    play_status = [False, False]
+    final_results = []
+    recording = False
+
+    for i, frame in enumerate(vid):
+        if (i+14)%15 == 0:
+            last_frames = []
+        else:
+            last_frames.append(frame)
+
+        if frame['pts'] > 210 and i > 30 and round(frame['pts'] / (1/fps*30), 4).is_integer(): ### equal to i%10 == 0
+            last_results = []
+            last_results = run_ocr(last_results, last_frames, corner_w, corner_h)
+            #for last_frame in last_frames:
+            #    time_board = to_pil_image(last_frame['data'][:, corner_w:, corner_h:])
+            #    result, _ = ocr(np.array(time_board))
+            #    for r in result.values():
+            #        if (any(item in r[-1] for item in symbols) and (len(r[-1]) < 5)) or (r[-1].isdigit() and len(r[-1]) >= 3):
+            #            last_results.append(r[-1])
+            if len(last_results) >= 3:
+                voting = []
+                elements = list(set(last_results))
+                for last_result in last_results:
+                    voting.append(elements.index(last_result))
+                final_result = elements[max(set(voting), key=voting.count)]
+                play_status.append(True)
+                play_status.pop(0)
+            else:
+                final_result = 0
+                play_status.append(False)
+                play_status.pop(0)
+
+            if play_status[0] == False and play_status[-1] == True:
+                start_time = frame['pts']
+                recording = True
+            elif play_status[0] == True and play_status[-1] == False:
+                end_time = frame['pts']
+                recording = False
+                if start_time < end_time:
+                    revise = []
+                    for f in final_results:
+                        for item in symbols:
+                            no_time = "".join(f.split(item))
+                            if no_time.isdigit():
+                                revise.append(no_time)
+                                break
+                    import IPython; IPython.embed()
+                    short_clip = torchvision.io.read_video(args.video_path, start_time, end_time, 'sec')
+                    torchvision.io.write_video(args.save_path + str(n_th) + '.mp4', short_clip[0], fps)
+                    n_th += 1
+                    import IPython; IPython.embed()
+
+            if recording:
+                final_results.append(final_result)
+            else:
+                final_results = []
+
+    for i, frame in enumerate(vid):
         if round(frame['pts'] / (1/fps*30), 4).is_integer():
             time_board = to_pil_image(frame['data'][:, corner_w:, corner_h:])
             result, _ = ocr(np.array(time_board))
