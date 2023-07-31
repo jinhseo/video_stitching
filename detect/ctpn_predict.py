@@ -36,20 +36,23 @@ def dis(image):
 
 
 def get_det_boxes(image,display = True, expand = True):
-    #import IPython; IPython.embed() ### TODO:
-    image = resize(image, height=height)
-    #image = F_T.resize(image, height)
-    image_r = image.copy()
-    #image_r = image.clone()
-    image_c = image.copy()
-    #image_c = image.clone()
-    h, w = image.shape[:2]
+    #image = resize(image, height=height) ###shaep == (720, 1280, 3)
+    image = F_T.resize(image, height)
+    #image_r = image.copy()
+    image_r = image.clone()
+    #image_c = image.copy()
+    image_c = image.clone()
 
-    image = image.astype(np.float32) - config.IMAGE_MEAN
-    #image = image.type(torch.float32) - torch.tensor(config.IMAGE_MEAN).to(device)
+    #h, w = image.shape[:2]
+    h, w = image.shape[1:]
+    #h, w = image.shape[2:]
+    #image = image.astype(np.float32) - config.IMAGE_MEAN
+    image = image.type(torch.float32) - torch.tensor(config.IMAGE_MEAN).unsqueeze(1).unsqueeze(2)
 
-    image = torch.from_numpy(image.transpose(2, 0, 1)).unsqueeze(0).float()
+    #image = torch.from_numpy(image.transpose(2, 0, 1)).unsqueeze(0).float() ###shape = [1,3,720,1280]
     #image = image.permute(2, 0, 1).unsqueeze(0).float()
+    #image = image.permute(0, 3, 1, 2).float()
+    image = image.unsqueeze(0).float()
 
     with torch.no_grad():
         image = image.to(device)

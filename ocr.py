@@ -73,5 +73,6 @@ def ocr(image):
     # detect
     text_recs, img_framed, image = get_det_boxes(image, display = False)
     text_recs = sort_box(text_recs)
+    image = np.array(image.permute(1,2,0))
     result = charRec(image, text_recs)
     return result, img_framed
